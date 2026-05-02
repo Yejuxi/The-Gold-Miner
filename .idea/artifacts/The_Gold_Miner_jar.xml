@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="The Gold Miner:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/The_Gold_Miner_jar</output-path>
+    <root id="archive" name="The Gold Miner.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="The Gold Miner" />
+    </root>
+  </artifact>
+</component>
