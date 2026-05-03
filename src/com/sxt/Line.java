@@ -2,10 +2,13 @@ package com.sxt;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.URL;
 
 public class Line {
     //起点坐标
+    javax.swing.Timer timer;
     int x = 380;
     int y = 180;
     //终点坐标
@@ -44,6 +47,7 @@ public class Line {
 
     //绘制方法
     void lines(Graphics g){
+
         endx = (int) (x + length*Math.cos(n * Math.PI));
         endy = (int) (y + length*Math.sin(n * Math.PI));
         g.setColor(Color.red);
@@ -86,43 +90,80 @@ public class Line {
                     break;
 
             case 3:
-                int m = 1;
-                if (length > MIN_len){
-                    length -= 5;
-                    lines(g);
-                    for (Object obj:this.frame.objectList){
-                        if (obj.flag){
-                            m = obj.m;
-                            obj.x = endx - obj.getWidth()/2;
-                            obj.y = endy;
-                            if (length <= MIN_len){
-                                obj.x = -150;
-                                obj.y = -150;
-                                obj.flag = false;
-                                Bg.waterFlag = false;
-                                Bg.count += obj.count;//加分
-                                state = 0;
+//                try {
+//                    Thread.sleep(m);
+//                } catch (InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                }
+                if (timer == null || !timer.isRunning()) {
+                    timer = new Timer(50,new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            int step = 5;
+                            for (Object obj:frame.objectList){
+                                if (obj.flag){
+                                    if (obj instanceof GoldMini){
+                                        step = 8;
+                                    } else if (obj instanceof Gold) {
+                                        step = 6;
+                                    } else if (obj instanceof GoldPlus) {
+                                        step = 3;
+                                    } else if (obj instanceof Rock) {
+                                        step = 4;
+                                    }
+                                    break;
+                                }
                             }
                             if (Bg.waterFlag){
-                                if (obj.type == 1) {
-                                    m = 1;
-                                }
-                                if (obj.type == 2) {
-                                    obj.x = -150;
-                                    obj.y = -150;
-                                    obj.flag = false;
-                                    Bg.waterFlag = false;
-                                    state = 2;
+                                for (Object obj:frame.objectList){
+                                    if (obj.flag && obj.type == 1){
+                                        step = step * 2;
+                                        break;
+                                    }
                                 }
                             }
+
+                            //每次定时器触发，执行一次缩短
+                            if (length > MIN_len){
+                                length -= step;
+                                int currentEndx = (int) (x + length*Math.cos(n * Math.PI));
+                                int currentEndy = (int) (y + length*Math.sin(n * Math.PI));
+//                                frame.repaint();//触发重绘，显示新位置
+                                for (Object obj:frame.objectList){
+                                    if (obj.flag){
+                                        obj.x = currentEndx - obj.getWidth() / 2;
+                                        obj.y = currentEndy;
+
+                                        if (length <= MIN_len){
+                                            obj.x = -150;
+                                            obj.y = -150;
+                                            obj.flag = false;
+                                            Bg.waterFlag = false;
+                                            Bg.count += obj.count;//加分
+                                            state = 0;
+                                            timer.stop();
+                                        }
+                                        if (Bg.waterFlag && obj.type == 2){
+                                                obj.x = -150;
+                                                obj.y = -150;
+                                                obj.flag = false;
+                                                Bg.waterFlag = false;
+                                                state = 2;
+                                                timer.stop();
+                                        }
+                                        break;
+                                    }
+                                }
+                                frame.repaint();
+                            }else {
+                                timer.stop();
+                                state = 0;
+                            }
                         }
-                    }
+                    });
+                     timer.start();
                 }
-                try {
-                    Thread.sleep(m);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                lines(g);
                 break;
         }
         }
@@ -130,6 +171,11 @@ public class Line {
         void reGame(){
             n = 0;
             length = 100;
+            state = 0;
+            if (timer != null && timer.isRunning()) {
+                timer.stop();
+                timer = null;
+            }
         }
     }
 

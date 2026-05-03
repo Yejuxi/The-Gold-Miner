@@ -63,6 +63,54 @@ public class GameWin extends JFrame {
         }
     }
 
+    //提取物品生成逻辑
+    private void generateObjects(){
+        objectList.clear();
+        boolean isPlace;
+        for (int i = 0; i < 11; i++) {
+            isPlace = true;
+            double random =  Math.random();
+            Gold gold;
+            if(random<0.3){
+                gold = new GoldMini();
+            }else if (random < 0.7) {
+                gold = new GoldPlus();
+            }else {
+                gold = new Gold();
+            }
+            for (Object obj: objectList){
+                if (gold.getRect().intersects(obj.getRect())){
+                    isPlace = false;
+                    break;
+                }
+            }
+            if (isPlace){
+                objectList.add(gold);
+            }else {
+                isPlace = true;
+                i--;
+            }
+        }
+        for (int i = 0; i < 3; i++) {
+            isPlace = true;
+            Rock rock = new Rock();
+            for (Object obj: objectList){
+                if (rock.getRect().intersects(obj.getRect())){
+                    isPlace = false;
+                    break;
+                }
+            }
+            if (isPlace){
+                objectList.add(rock);
+            }else  {
+                i--;
+            }
+        }
+    }
+
+
+
+
     Image offScreenImage;
 
     //初始化窗口信息
@@ -78,6 +126,7 @@ public class GameWin extends JFrame {
         //关闭窗口
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
+        //鼠标监听
         addMouseListener(new MouseAdapter(){
             public void mouseClicked(MouseEvent e){
                 super.mouseClicked(e);
@@ -100,20 +149,41 @@ public class GameWin extends JFrame {
                         }
                         break;
                     case 2:
-                        if (e.getButton() == 1){
-                            bg.shop = true;
+                        if (e.getButton() == 1){//左键购买
+                            if (Bg.count >= bg.price) {
+                                Bg.count -= bg.price;
+                                Bg.waterNum++;
+                                // 购买后自动进入下一关
+                                if (line.timer != null && line.timer.isRunning()) {
+                                    line.timer.stop();
+                                    line.timer = null;
+                                }
+                                line.reGame();
+                                generateObjects();
+                                state = 1;
+                                bg.startTime = System.currentTimeMillis();
+                                repaint();
+                            }else {
+                                System.out.println("积分不足，无法购买");
+                            }
                         }
                         if (e.getButton() == 3){
+                            //开始下一关，先停止任何残留定时器
+                            if (line.timer != null && line.timer.isRunning()){
+                                line.timer.stop();
+                                line.timer = null;
+                            }
+                            line.reGame();
+                            generateObjects();
                             state = 1;
                             bg.startTime = System.currentTimeMillis();
+                            repaint();
                         }
                         break;
                     case 3:
                     case 4:
                         if (e.getButton() == 1){
-                            state = 0;
-                            bg.reGame();
-                            line. reGame();
+                            resetGame();//调用重置方法
                         }
                         break;
                     default:
@@ -133,19 +203,78 @@ public class GameWin extends JFrame {
     }
 
     //下一关
+//    public void nextLevel(){
+//        if (bg.gameTime() && state == 1){
+//            if (Bg.count >= bg.goal){
+//                if (Bg.level == 5){
+//                    state = 4;
+//                }else {
+//                    state = 2;
+//                    Bg.level++;
+//                }
+//            }else {state = 3;}
+//            dispose();
+//            GameWin gameWin = new GameWin();
+//            gameWin.launch();
+//        }
+//    }
+
+    //重置当前窗口游戏数据
+    public void resetGame(){
+        //重置游戏状态
+        state = 0;
+        Bg.level = 1;
+        Bg.count = 0;
+        Bg.waterNum = 3;
+        Bg.waterFlag = false;
+
+        //重新生成物体列表
+        objectList.clear();
+        generateObjects();
+
+        //重置钩爪线条
+        line.reGame();
+
+        //重置背景的时间等
+        bg.startTime = 0;
+        bg.endTime = 0;
+        bg.shop = false;
+    }
+
+
+
+    //修改构造器，直接调用 generateObjects()
+    {
+        generateObjects();
+    }
+
+    //下一关，重置物品列表和状态
     public void nextLevel(){
         if (bg.gameTime() && state == 1){
-            if (Bg.count >= bg.goal){
+            //1.强制停止抓钩的收回定时器（如果正在运行）
+            if (line.timer != null && line.timer.isRunning()){
+                line.timer.stop();
+                line.timer = null;
+            }
+            //2.重置抓钩的所有状态
+            line.reGame();
+            //3.清除所有物体的被抓标志
+//            for (Object obj: objectList){
+//                obj.flag = false;
+//            }
+//            objectList.clear();
+            //4.根据得分判断进入商店，胜利或失败
+            if (Bg.count >= bg.getGoal()){
                 if (Bg.level == 5){
                     state = 4;
                 }else {
-                    state = 2;
+                    state = 2;   // 进入商店
                     Bg.level++;
                 }
-            }else {state = 3;}
-            dispose();
-            GameWin gameWin = new GameWin();
-            gameWin.launch();
+            }else {
+                state = 3;
+            }
+            // 不再调用 dispose() 和 new GameWin()
         }
     }
 

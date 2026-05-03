@@ -5,7 +5,9 @@ import java.net.URL;
 
 public class Bg {
     static int level = 1;//关卡数
-    int goal = level * 15;
+    public int getGoal(){
+        return level * 15;
+    }
     static int count = 0;//总分
     static int waterNum = 3;//药水数量
     static boolean waterFlag = false;//药水状态，默认F，T表示正在使用
@@ -36,7 +38,7 @@ public class Bg {
         g.drawImage(bg,0,200,null);
         switch (GameWin.state){
             case 0:
-                drawWord(g,80,Color.green,"准备开始",200,400);
+                drawWord(g,80,Color.green,"点击右键开始",200,400);
                 break;
             case 1:
                 g.drawImage(peo,230,50,null);
@@ -48,7 +50,7 @@ public class Bg {
                 //关卡数
                 drawWord(g,20,Color.black,"第"+level+"关",30,60);
                 //目标积分
-                drawWord(g,30,Color.black,"目标："+goal,30,110);
+                drawWord(g,30,Color.black,"目标："+getGoal(),30,110);
                 //时间组件
                 endTime = System.currentTimeMillis();
                 long tim = 20 - (endTime - startTime)/1000;
@@ -57,29 +59,27 @@ public class Bg {
             case 2:
                 g.drawImage(water,300,400,null);
                 drawWord(g,30,Color.black,"价格"+price,300,500);
-                drawWord(g,30,Color.black,"是否购买？"+waterNum,300,550);
-                if (shop){
-                    count = count - price;
-                    waterNum++;
-                    shop =  false;
-                    GameWin.state = 1;
-                    startTime = System.currentTimeMillis();
-                }
+                drawWord(g,30,Color.black,"是否购买？(左键购买，右键跳过)",200,550);
+//                if (shop){
+//                    count = count - price;
+//                    waterNum++;
+//                    shop =  false;
+//                    GameWin.state = 1;
+//                    startTime = System.currentTimeMillis();
+//                }
                 break;
             case 3:
                 drawWord(g,80,Color.cyan,"失败",250,350);
                 drawWord(g,80,Color.cyan,"积分:"+count,200,450);
                 break;
             case 4:
-                drawWord(g,80,Color.red,"失败",250,350);
+                drawWord(g,80,Color.red,"成功",250,350);
                 drawWord(g,80,Color.red,"积分:"+count,200,450);
                 break;
             default:
         }
-
-
-
     }
+
     //t倒计时完成，f正在倒计时
     boolean gameTime(){
         long tim = (endTime - startTime)/1000;
@@ -91,11 +91,10 @@ public class Bg {
 
     //重置元素
     void reGame(){
-        int level = 1;//关卡数
-        goal = level * 15;
-        int count = 0;//总分
-        int waterNum = 3;//药水数量
-        boolean waterFlag = false;
+        level = 1;//关卡数
+        count = 0;//总分
+        waterNum = 3;//药水数量
+        waterFlag = false;
     }
 
     //绘制字符串
